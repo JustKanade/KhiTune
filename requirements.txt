@@ -1,0 +1,4 @@
+PyQt-Fluent-Widgets
+requests
+beautifulsoup4
+

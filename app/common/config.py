@@ -1,8 +1,9 @@
 # coding:utf-8
 import sys
 from enum import Enum
+from pathlib import Path
 
-from PyQt5.QtCore import QLocale
+from PyQt5.QtCore import QLocale, QStandardPaths
 from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, RangeConfigItem,
                             BoolValidator, OptionsValidator, RangeValidator, Theme, 
                             ConfigSerializer, __version__)
@@ -67,10 +68,29 @@ class Config(QConfig):
 YEAR = 2024
 AUTHOR = "Developer"
 VERSION = __version__
-APP_NAME = "Khinsider-Tune"
+APP_NAME = "KhiTune"
+
+
+def get_config_path():
+    """ Get system config directory path """
+    # get base config location
+    base_path = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+    
+    # build app-specific config directory
+    if sys.platform == 'win32':
+        # Windows: %APPDATA%\APP_NAME
+        config_dir = Path(base_path).parent / APP_NAME
+    else:
+        # Linux/Mac: ~/.config/APP_NAME
+        config_dir = Path(base_path)
+    
+    # create directory if not exists
+    config_dir.mkdir(parents=True, exist_ok=True)
+    
+    return config_dir / 'config.json'
 
 
 cfg = Config()
 cfg.themeMode.value = Theme.AUTO
-qconfig.load('app/config/config.json', cfg)
+qconfig.load(str(get_config_path()), cfg)
 

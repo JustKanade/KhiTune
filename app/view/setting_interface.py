@@ -1,10 +1,10 @@
 # coding:utf-8
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog
+from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog, QHBoxLayout
 from qfluentwidgets import (ScrollArea, ExpandLayout, SettingCardGroup, SwitchSettingCard,
                             OptionsSettingCard, CustomColorSettingCard, LineEdit, setTheme, 
                             setThemeColor, isDarkTheme, RangeSettingCard, PushSettingCard,
-                            InfoBar)
+                            InfoBar, ExpandSettingCard, SettingCard, PushButton)
 from qfluentwidgets import FluentIcon as FIF
 
 from ..common.config import cfg, Language
@@ -12,6 +12,42 @@ from ..common.signal_bus import signalBus
 from ..common.style_sheet import StyleSheet
 from .proxy_host_card import ProxyHostCard
 from ..background import BackgroundManager
+
+
+class BackgroundImageCard(SettingCard):
+    """ Custom setting card with select and clear buttons for background image """
+    
+    def __init__(self, title, content, icon, parent=None):
+        super().__init__(icon, title, content, parent)
+        
+        # create buttons
+        self.selectButton = PushButton(self.tr('Select image'), self)
+        self.clearButton = PushButton(self.tr('Clear'), self)
+        
+        # create button layout
+        self.buttonLayout = QHBoxLayout()
+        self.buttonLayout.setSpacing(10)
+        self.buttonLayout.addWidget(self.selectButton)
+        self.buttonLayout.addWidget(self.clearButton)
+        
+        # add button layout to the card
+        self.hBoxLayout.addLayout(self.buttonLayout)
+        self.hBoxLayout.addSpacing(16)
+        
+        # initialize display
+        self._updateDisplay()
+    
+    def _updateDisplay(self):
+        """ Update the card display based on current background image path """
+        bg_path = cfg.get(cfg.backgroundImagePath)
+        if bg_path:
+            import os
+            file_name = os.path.basename(bg_path)
+            self.setContent(f"{self.tr('Selected')}: {file_name}")
+            self.clearButton.setEnabled(True)
+        else:
+            self.setContent(self.tr('Choose a custom background image file'))
+            self.clearButton.setEnabled(False)
 
 
 class SettingInterface(ScrollArea):
@@ -73,9 +109,12 @@ class SettingInterface(ScrollArea):
             parent=self.personalGroup
         )
         
-        # background group
-        self.backgroundGroup = SettingCardGroup(
-            self.tr('Background'), self.scrollWidget)
+        # background group - use ExpandSettingCard for collapsible section
+        self.backgroundGroup = ExpandSettingCard(
+            FIF.PHOTO,
+            self.tr('Background'),
+            self.tr('Customize application background settings'),
+            self.scrollWidget)
         self.backgroundEnableCard = SwitchSettingCard(
             FIF.PHOTO,
             self.tr('Background image'),
@@ -83,11 +122,10 @@ class SettingInterface(ScrollArea):
             cfg.backgroundImageEnabled,
             self.backgroundGroup
         )
-        self.backgroundFileCard = PushSettingCard(
-            self.tr('Choose image'),
-            FIF.FOLDER,
+        self.backgroundFileCard = BackgroundImageCard(
             self.tr('Background file'),
-            cfg.get(cfg.backgroundImagePath) or self.tr('Not selected'),
+            self.tr('Choose a custom background image file'),
+            FIF.FOLDER,
             self.backgroundGroup
         )
         self.backgroundOpacityCard = RangeSettingCard(
@@ -153,10 +191,12 @@ class SettingInterface(ScrollArea):
         self.personalGroup.addSettingCard(self.languageCard)
         self.personalGroup.addSettingCard(self.dpiCard)
         
-        self.backgroundGroup.addSettingCard(self.backgroundEnableCard)
-        self.backgroundGroup.addSettingCard(self.backgroundFileCard)
-        self.backgroundGroup.addSettingCard(self.backgroundOpacityCard)
-        self.backgroundGroup.addSettingCard(self.backgroundBlurCard)
+        # add widgets to expand card view instead of as setting cards
+        self.backgroundGroup.viewLayout.addWidget(self.backgroundEnableCard)
+        self.backgroundGroup.viewLayout.addWidget(self.backgroundFileCard)
+        self.backgroundGroup.viewLayout.addWidget(self.backgroundOpacityCard)
+        self.backgroundGroup.viewLayout.addWidget(self.backgroundBlurCard)
+        self.backgroundGroup._adjustViewSize()
         
         self.networkGroup.addSettingCard(self.proxyEnableCard)
         self.networkGroup.addSettingCard(self.proxyHostCard)
@@ -183,7 +223,8 @@ class SettingInterface(ScrollArea):
         
         # background settings
         self.backgroundEnableCard.checkedChanged.connect(self.__onBackgroundEnabledChanged)
-        self.backgroundFileCard.clicked.connect(self.__onChooseBackgroundFile)
+        self.backgroundFileCard.selectButton.clicked.connect(self.__onChooseBackgroundFile)
+        self.backgroundFileCard.clearButton.clicked.connect(self.__onClearBackgroundImage)
         self.backgroundOpacityCard.valueChanged.connect(self.__onBackgroundSettingChanged)
         self.backgroundBlurCard.valueChanged.connect(self.__onBackgroundSettingChanged)
         
@@ -240,10 +281,7 @@ class SettingInterface(ScrollArea):
             # validate image
             if BackgroundManager.validate_image_path(file_path):
                 cfg.set(cfg.backgroundImagePath, file_path)
-                # update button content
-                import os
-                filename = os.path.basename(file_path)
-                self.backgroundFileCard.setContent(filename)
+                self.backgroundFileCard._updateDisplay()
                 self.__onBackgroundSettingChanged()
             else:
                 InfoBar.error(
@@ -252,6 +290,12 @@ class SettingInterface(ScrollArea):
                     duration=2000,
                     parent=self
                 )
+    
+    def __onClearBackgroundImage(self):
+        """ Handle clear background image """
+        cfg.set(cfg.backgroundImagePath, "")
+        self.backgroundFileCard._updateDisplay()
+        self.__onBackgroundSettingChanged()
     
     def __onBackgroundSettingChanged(self):
         """ Handle background setting changed """

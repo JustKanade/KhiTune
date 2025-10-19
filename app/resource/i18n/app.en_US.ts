@@ -211,6 +211,26 @@
         <source>Please select a valid image file</source>
         <translation>Please select a valid image file</translation>
     </message>
+    <message>
+        <source>Customize application background settings</source>
+        <translation>Customize application background settings</translation>
+    </message>
+    <message>
+        <source>Choose a custom background image file</source>
+        <translation>Choose a custom background image file</translation>
+    </message>
+    <message>
+        <source>Select image</source>
+        <translation>Select image</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Clear</translation>
+    </message>
+    <message>
+        <source>Selected</source>
+        <translation>Selected</translation>
+    </message>
 </context>
 <context>
     <name>ProxyHostCard</name>

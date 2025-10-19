@@ -211,6 +211,26 @@
         <source>Please select a valid image file</source>
         <translation>请选择一个有效的图片文件</translation>
     </message>
+    <message>
+        <source>Customize application background settings</source>
+        <translation>自定义应用程序背景设置</translation>
+    </message>
+    <message>
+        <source>Choose a custom background image file</source>
+        <translation>选择自定义背景图片文件</translation>
+    </message>
+    <message>
+        <source>Select image</source>
+        <translation>选择图片</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <source>Selected</source>
+        <translation>已选择</translation>
+    </message>
 </context>
 <context>
     <name>ProxyHostCard</name>

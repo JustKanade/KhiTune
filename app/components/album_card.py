@@ -1,9 +1,10 @@
 # coding:utf-8
-from PyQt5.QtCore import Qt, QUrl, QRectF
+from PyQt5.QtCore import Qt, QUrl, QRectF, QSize
 from PyQt5.QtGui import QDesktopServices, QPixmap, QFont, QPainter, QPainterPath, QBrush
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout
 
-from qfluentwidgets import CardWidget, IconWidget, FluentIcon, BodyLabel, CaptionLabel
+from qfluentwidgets import (CardWidget, IconWidget, FluentIcon, BodyLabel, CaptionLabel, 
+                            TransparentToolButton, ToolTipFilter, ToolTipPosition)
 
 from ..utils import ImageLoader
 
@@ -17,12 +18,23 @@ class AlbumCard(CardWidget):
         self.url = QUrl(url)
         self.coverUrl = coverUrl
         
+        # store album data for dialog
+        self.albumData = {
+            'title': title,
+            'platform': platform,
+            'type': albumType,
+            'year': year,
+            'url': url,
+            'cover': coverUrl
+        }
+        
         # create widgets
         self.coverLabel = QLabel(self)
         self.titleLabel = BodyLabel(title, self)
         self.platformLabel = CaptionLabel(platform, self)
         self.metaLabel = CaptionLabel(f"{albumType} • {year}", self)
         self.iconWidget = IconWidget(FluentIcon.MUSIC, self)
+        self.moreButton = TransparentToolButton(FluentIcon.MORE, self)
         
         self.hBoxLayout = QHBoxLayout(self)
         self.vBoxLayout = QVBoxLayout()
@@ -34,8 +46,8 @@ class AlbumCard(CardWidget):
     
     def __initWidget(self):
         """ Initialize widget """
-        self.setCursor(Qt.PointingHandCursor)
         self.setFixedHeight(96)
+        self.setCursor(Qt.PointingHandCursor)  # show clickable cursor for card
         
         # setup cover label
         self.coverLabel.setFixedSize(64, 64)
@@ -59,9 +71,16 @@ class AlbumCard(CardWidget):
         font.setBold(True)
         self.titleLabel.setFont(font)
         
-        # setup platform and meta labels with secondary color
-        self.platformLabel.setStyleSheet("color: rgba(255, 255, 255, 0.6);")
-        self.metaLabel.setStyleSheet("color: rgba(255, 255, 255, 0.45);")
+        # setup platform and meta labels with secondary color for both themes
+        self.platformLabel.setTextColor("#606060", "#d2d2d2")
+        self.metaLabel.setTextColor("#909090", "#a0a0a0")
+        
+        # setup more button
+        self.moreButton.setFixedSize(32, 32)
+        self.moreButton.setIconSize(QSize(16, 16))
+        self.moreButton.setToolTip(self.tr("View on KHInsider"))
+        self.moreButton.installEventFilter(ToolTipFilter(self.moreButton, 500, ToolTipPosition.TOP))
+        self.moreButton.clicked.connect(self.__onMoreClicked)
         
         # setup layouts
         self.hBoxLayout.setSpacing(12)
@@ -73,6 +92,7 @@ class AlbumCard(CardWidget):
         self.hBoxLayout.addWidget(self.coverLabel, 0, Qt.AlignTop)
         self.hBoxLayout.addWidget(self.iconWidget, 0, Qt.AlignTop)
         self.hBoxLayout.addLayout(self.vBoxLayout, 1)
+        self.hBoxLayout.addWidget(self.moreButton, 0, Qt.AlignVCenter)
         
         self.vBoxLayout.addSpacing(2)
         self.vBoxLayout.addWidget(self.titleLabel)
@@ -144,8 +164,54 @@ class AlbumCard(CardWidget):
         self.coverLabel.hide()
         self.iconWidget.show()
     
-    def mouseReleaseEvent(self, e):
-        """ Handle mouse release """
-        super().mouseReleaseEvent(e)
+    def __onMoreClicked(self):
+        """ Handle more button clicked """
         QDesktopServices.openUrl(self.url)
+    
+    def mouseReleaseEvent(self, e):
+        """ Handle card click to show detail dialog """
+        super().mouseReleaseEvent(e)
+        # only show dialog if not clicking on the more button
+        if not self.moreButton.geometry().contains(e.pos()):
+            self.__showDetailDialog()
+    
+    def __showDetailDialog(self):
+        """ Show album detail dialog """
+        from .album_detail_dialog import AlbumDetailDialog
+        from ..api import KhinsiderAPI
+        from PyQt5.QtCore import QThread, pyqtSignal
+        
+        # create dialog
+        dialog = AlbumDetailDialog(self.albumData, self.window())
+        
+        # create thread to fetch tracks and covers
+        class FetchAlbumDataThread(QThread):
+            tracksFinished = pyqtSignal(list)
+            coversFinished = pyqtSignal(list)
+            error = pyqtSignal(str)
+            
+            def __init__(self, url, parent=None):
+                super().__init__(parent)
+                self.url = url
+            
+            def run(self):
+                try:
+                    # fetch tracks and covers in parallel
+                    tracks = KhinsiderAPI.fetchAlbumTracks(self.url)
+                    covers = KhinsiderAPI.fetchAlbumCovers(self.url)
+                    
+                    self.coversFinished.emit(covers)
+                    self.tracksFinished.emit(tracks)
+                except Exception as e:
+                    self.error.emit(str(e))
+        
+        # start fetching album data
+        thread = FetchAlbumDataThread(self.albumData['url'])
+        thread.tracksFinished.connect(dialog.setTracks)
+        thread.coversFinished.connect(dialog.setCovers)
+        thread.error.connect(lambda msg: dialog.setError(dialog.tr('Failed to load album data')))
+        thread.start()
+        
+        # show dialog
+        dialog.exec()
 

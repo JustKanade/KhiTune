@@ -1,7 +1,11 @@
 # coding:utf-8
 import requests
+import urllib3
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
+
+# Disable SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class KhinsiderAPI:
@@ -134,6 +138,105 @@ class KhinsiderAPI:
             
         except Exception as e:
             print(f"Error fetching albums from {url}: {e}")
+            return []
+    
+    @classmethod
+    def fetchAlbumTracks(cls, album_url: str) -> List[Dict]:
+        """
+        Fetch tracks from album page
+
+        Parameters
+        ----------
+        album_url: str
+            album page URL
+
+        Returns
+        -------
+        tracks: List[Dict]
+            list of track dictionaries with keys: name, duration
+        """
+        try:
+            response = requests.get(album_url, headers=cls.HEADERS, timeout=10, verify=False)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            tracks = []
+            
+            # find track table
+            table = soup.find('table', {'id': 'songlist'})
+            if not table:
+                return []
+            
+            rows = table.find_all('tr')[1:]  # skip header
+            
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) < 3:
+                    continue
+                
+                # extract track name from third column (index 2)
+                track_link = cols[2].find('a')
+                if not track_link:
+                    continue
+                
+                track_name = track_link.text.strip()
+                
+                # extract duration from fourth column (index 3)
+                duration = ''
+                if len(cols) > 3:
+                    duration = cols[3].text.strip()
+                
+                tracks.append({
+                    'name': track_name,
+                    'duration': duration
+                })
+            
+            return tracks
+            
+        except Exception as e:
+            print(f"Error fetching tracks from {album_url}: {e}")
+            return []
+    
+    @classmethod
+    def fetchAlbumCovers(cls, album_url: str) -> List[str]:
+        """
+        Fetch all album cover image URLs from album page
+
+        Parameters
+        ----------
+        album_url: str
+            album page URL
+
+        Returns
+        -------
+        covers: List[str]
+            list of cover image URLs
+        """
+        try:
+            response = requests.get(album_url, headers=cls.HEADERS, timeout=10, verify=False)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            covers = []
+            
+            # find all album image divs (class="albumImage")
+            album_image_divs = soup.find_all('div', class_='albumImage')
+            
+            for div in album_image_divs:
+                # find <a> tag within div, href points to full-size image
+                link = div.find('a')
+                if link:
+                    cover_href = link.get('href', '')
+                    if cover_href:
+                        if cover_href.startswith('/'):
+                            covers.append(cls.BASE_URL + cover_href)
+                        elif cover_href.startswith('http'):
+                            covers.append(cover_href)
+            
+            return covers
+            
+        except Exception as e:
+            print(f"Error fetching album covers from {album_url}: {e}")
             return []
     
     @classmethod

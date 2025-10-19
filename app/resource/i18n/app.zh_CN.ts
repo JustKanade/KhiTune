@@ -176,6 +176,40 @@
     </message>
 </context>
 <context>
+    <name>AlbumCard</name>
+    <message>
+        <source>View on KHInsider</source>
+        <translation>在 KHInsider 查看</translation>
+    </message>
+</context>
+<context>
+    <name>AlbumDetailDialog</name>
+    <message>
+        <source>Loading tracks...</source>
+        <translation>加载曲目中...</translation>
+    </message>
+    <message>
+        <source>Loading album information...</source>
+        <translation>加载专辑信息中...</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation>在浏览器中打开</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <source>No tracks found or failed to load.</source>
+        <translation>未找到曲目或加载失败。</translation>
+    </message>
+    <message>
+        <source>Failed to load tracks</source>
+        <translation>加载曲目失败</translation>
+    </message>
+</context>
+<context>
     <name>Translator</name>
     <message>
         <source>Home</source>

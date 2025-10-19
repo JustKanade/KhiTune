@@ -176,6 +176,40 @@
     </message>
 </context>
 <context>
+    <name>AlbumCard</name>
+    <message>
+        <source>View on KHInsider</source>
+        <translation>View on KHInsider</translation>
+    </message>
+</context>
+<context>
+    <name>AlbumDetailDialog</name>
+    <message>
+        <source>Loading tracks...</source>
+        <translation>Loading tracks...</translation>
+    </message>
+    <message>
+        <source>Loading album information...</source>
+        <translation>Loading album information...</translation>
+    </message>
+    <message>
+        <source>Open in Browser</source>
+        <translation>Open in Browser</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Close</translation>
+    </message>
+    <message>
+        <source>No tracks found or failed to load.</source>
+        <translation>No tracks found or failed to load.</translation>
+    </message>
+    <message>
+        <source>Failed to load tracks</source>
+        <translation>Failed to load tracks</translation>
+    </message>
+</context>
+<context>
     <name>Translator</name>
     <message>
         <source>Home</source>

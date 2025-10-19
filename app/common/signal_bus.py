@@ -7,6 +7,7 @@ class SignalBus(QObject):
 
     micaEnableChanged = pyqtSignal(bool)
     themeChanged = pyqtSignal()
+    backgroundChanged = pyqtSignal()
 
 
 signalBus = SignalBus()

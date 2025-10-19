@@ -3,8 +3,9 @@ import sys
 from enum import Enum
 
 from PyQt5.QtCore import QLocale
-from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
-                            OptionsValidator, Theme, ConfigSerializer, __version__)
+from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, RangeConfigItem,
+                            BoolValidator, OptionsValidator, RangeValidator, Theme, 
+                            ConfigSerializer, __version__)
 
 
 class ProxyValidator:
@@ -51,6 +52,12 @@ class Config(QConfig):
     language = OptionsConfigItem(
         "MainWindow", "Language", Language.ENGLISH, OptionsValidator(Language), LanguageSerializer(), restart=True)
     
+    # background
+    backgroundImageEnabled = ConfigItem("Background", "ImageEnabled", False, BoolValidator())
+    backgroundImagePath = ConfigItem("Background", "ImagePath", "", ProxyValidator())
+    backgroundOpacity = RangeConfigItem("Background", "Opacity", 80, RangeValidator(0, 100))
+    backgroundBlurRadius = RangeConfigItem("Background", "BlurRadius", 0, RangeValidator(0, 50))
+    
     # proxy
     proxyEnabled = ConfigItem("Proxy", "Enabled", False, BoolValidator())
     proxyHost = ConfigItem("Proxy", "Host", "", ProxyValidator())
@@ -60,7 +67,7 @@ class Config(QConfig):
 YEAR = 2024
 AUTHOR = "Developer"
 VERSION = __version__
-APP_NAME = "KhiTune"
+APP_NAME = "Khinsider-Tune"
 
 
 cfg = Config()

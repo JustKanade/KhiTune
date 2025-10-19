@@ -155,6 +155,62 @@
         <source>Set proxy host and port</source>
         <translation>设置代理主机和端口</translation>
     </message>
+    <message>
+        <source>Background</source>
+        <translation>背景</translation>
+    </message>
+    <message>
+        <source>Background image</source>
+        <translation>背景图片</translation>
+    </message>
+    <message>
+        <source>Enable custom background image for main window</source>
+        <translation>为主窗口启用自定义背景图片</translation>
+    </message>
+    <message>
+        <source>Choose image</source>
+        <translation>选择图片</translation>
+    </message>
+    <message>
+        <source>Background file</source>
+        <translation>背景文件</translation>
+    </message>
+    <message>
+        <source>Not selected</source>
+        <translation>未选择</translation>
+    </message>
+    <message>
+        <source>Background opacity</source>
+        <translation>背景透明度</translation>
+    </message>
+    <message>
+        <source>Adjust the opacity of background image (0-100)</source>
+        <translation>调整背景图片的透明度（0-100）</translation>
+    </message>
+    <message>
+        <source>Background blur</source>
+        <translation>背景模糊</translation>
+    </message>
+    <message>
+        <source>Adjust the blur radius of background image (0-50)</source>
+        <translation>调整背景图片的模糊半径（0-50）</translation>
+    </message>
+    <message>
+        <source>Choose background image</source>
+        <translation>选择背景图片</translation>
+    </message>
+    <message>
+        <source>Image files</source>
+        <translation>图片文件</translation>
+    </message>
+    <message>
+        <source>Invalid image</source>
+        <translation>无效的图片</translation>
+    </message>
+    <message>
+        <source>Please select a valid image file</source>
+        <translation>请选择一个有效的图片文件</translation>
+    </message>
 </context>
 <context>
     <name>ProxyHostCard</name>

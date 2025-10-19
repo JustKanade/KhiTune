@@ -1,14 +1,17 @@
 # coding:utf-8
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel
+from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog
 from qfluentwidgets import (ScrollArea, ExpandLayout, SettingCardGroup, SwitchSettingCard,
-                            OptionsSettingCard, CustomColorSettingCard, LineEdit, setTheme, setThemeColor, isDarkTheme)
+                            OptionsSettingCard, CustomColorSettingCard, LineEdit, setTheme, 
+                            setThemeColor, isDarkTheme, RangeSettingCard, PushSettingCard,
+                            InfoBar)
 from qfluentwidgets import FluentIcon as FIF
 
 from ..common.config import cfg, Language
 from ..common.signal_bus import signalBus
 from ..common.style_sheet import StyleSheet
 from .proxy_host_card import ProxyHostCard
+from ..background import BackgroundManager
 
 
 class SettingInterface(ScrollArea):
@@ -70,6 +73,38 @@ class SettingInterface(ScrollArea):
             parent=self.personalGroup
         )
         
+        # background group
+        self.backgroundGroup = SettingCardGroup(
+            self.tr('Background'), self.scrollWidget)
+        self.backgroundEnableCard = SwitchSettingCard(
+            FIF.PHOTO,
+            self.tr('Background image'),
+            self.tr('Enable custom background image for main window'),
+            cfg.backgroundImageEnabled,
+            self.backgroundGroup
+        )
+        self.backgroundFileCard = PushSettingCard(
+            self.tr('Choose image'),
+            FIF.FOLDER,
+            self.tr('Background file'),
+            cfg.get(cfg.backgroundImagePath) or self.tr('Not selected'),
+            self.backgroundGroup
+        )
+        self.backgroundOpacityCard = RangeSettingCard(
+            cfg.backgroundOpacity,
+            FIF.TRANSPARENT,
+            self.tr('Background opacity'),
+            self.tr('Adjust the opacity of background image (0-100)'),
+            self.backgroundGroup
+        )
+        self.backgroundBlurCard = RangeSettingCard(
+            cfg.backgroundBlurRadius,
+            FIF.BRUSH,
+            self.tr('Background blur'),
+            self.tr('Adjust the blur radius of background image (0-50)'),
+            self.backgroundGroup
+        )
+        
         # network group
         self.networkGroup = SettingCardGroup(
             self.tr('Network'), self.scrollWidget)
@@ -118,6 +153,11 @@ class SettingInterface(ScrollArea):
         self.personalGroup.addSettingCard(self.languageCard)
         self.personalGroup.addSettingCard(self.dpiCard)
         
+        self.backgroundGroup.addSettingCard(self.backgroundEnableCard)
+        self.backgroundGroup.addSettingCard(self.backgroundFileCard)
+        self.backgroundGroup.addSettingCard(self.backgroundOpacityCard)
+        self.backgroundGroup.addSettingCard(self.backgroundBlurCard)
+        
         self.networkGroup.addSettingCard(self.proxyEnableCard)
         self.networkGroup.addSettingCard(self.proxyHostCard)
 
@@ -125,10 +165,14 @@ class SettingInterface(ScrollArea):
         self.expandLayout.setSpacing(28)
         self.expandLayout.setContentsMargins(36, 10, 36, 0)
         self.expandLayout.addWidget(self.personalGroup)
+        self.expandLayout.addWidget(self.backgroundGroup)
         self.expandLayout.addWidget(self.networkGroup)
         
         # load proxy settings
         self.__loadProxySettings()
+        
+        # update background card states
+        self.__updateBackgroundCardStates()
 
     def __connectSignalToSlot(self):
         """ Connect signal to slot """
@@ -136,6 +180,12 @@ class SettingInterface(ScrollArea):
         self.themeCard.optionChanged.connect(lambda ci: setTheme(cfg.get(ci)))
         self.themeColorCard.colorChanged.connect(lambda c: setThemeColor(c))
         self.micaCard.checkedChanged.connect(signalBus.micaEnableChanged)
+        
+        # background settings
+        self.backgroundEnableCard.checkedChanged.connect(self.__onBackgroundEnabledChanged)
+        self.backgroundFileCard.clicked.connect(self.__onChooseBackgroundFile)
+        self.backgroundOpacityCard.valueChanged.connect(self.__onBackgroundSettingChanged)
+        self.backgroundBlurCard.valueChanged.connect(self.__onBackgroundSettingChanged)
         
         # proxy settings
         self.proxyEnableCard.checkedChanged.connect(self.__onProxyEnabledChanged)
@@ -164,6 +214,49 @@ class SettingInterface(ScrollArea):
     def __onProxyPortChanged(self, text: str):
         """ Handle proxy port changed """
         cfg.set(cfg.proxyPort, text)
+
+    def __onBackgroundEnabledChanged(self, checked: bool):
+        """ Handle background enabled changed """
+        self.__updateBackgroundCardStates()
+        self.__onBackgroundSettingChanged()
+    
+    def __updateBackgroundCardStates(self):
+        """ Update background card enabled states """
+        enabled = self.backgroundEnableCard.isChecked()
+        self.backgroundFileCard.setEnabled(enabled)
+        self.backgroundOpacityCard.setEnabled(enabled)
+        self.backgroundBlurCard.setEnabled(enabled)
+    
+    def __onChooseBackgroundFile(self):
+        """ Handle choose background file """
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.tr("Choose background image"),
+            "",
+            self.tr("Image files") + " (*.jpg *.jpeg *.png *.bmp *.gif *.webp)"
+        )
+        
+        if file_path:
+            # validate image
+            if BackgroundManager.validate_image_path(file_path):
+                cfg.set(cfg.backgroundImagePath, file_path)
+                # update button content
+                import os
+                filename = os.path.basename(file_path)
+                self.backgroundFileCard.setContent(filename)
+                self.__onBackgroundSettingChanged()
+            else:
+                InfoBar.error(
+                    self.tr('Invalid image'),
+                    self.tr('Please select a valid image file'),
+                    duration=2000,
+                    parent=self
+                )
+    
+    def __onBackgroundSettingChanged(self):
+        """ Handle background setting changed """
+        # trigger main window repaint
+        signalBus.backgroundChanged.emit()
 
     def __showRestartTooltip(self):
         """ Show restart tooltip """

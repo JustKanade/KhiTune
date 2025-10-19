@@ -155,6 +155,62 @@
         <source>Set proxy host and port</source>
         <translation>Set proxy host and port</translation>
     </message>
+    <message>
+        <source>Background</source>
+        <translation>Background</translation>
+    </message>
+    <message>
+        <source>Background image</source>
+        <translation>Background image</translation>
+    </message>
+    <message>
+        <source>Enable custom background image for main window</source>
+        <translation>Enable custom background image for main window</translation>
+    </message>
+    <message>
+        <source>Choose image</source>
+        <translation>Choose image</translation>
+    </message>
+    <message>
+        <source>Background file</source>
+        <translation>Background file</translation>
+    </message>
+    <message>
+        <source>Not selected</source>
+        <translation>Not selected</translation>
+    </message>
+    <message>
+        <source>Background opacity</source>
+        <translation>Background opacity</translation>
+    </message>
+    <message>
+        <source>Adjust the opacity of background image (0-100)</source>
+        <translation>Adjust the opacity of background image (0-100)</translation>
+    </message>
+    <message>
+        <source>Background blur</source>
+        <translation>Background blur</translation>
+    </message>
+    <message>
+        <source>Adjust the blur radius of background image (0-50)</source>
+        <translation>Adjust the blur radius of background image (0-50)</translation>
+    </message>
+    <message>
+        <source>Choose background image</source>
+        <translation>Choose background image</translation>
+    </message>
+    <message>
+        <source>Image files</source>
+        <translation>Image files</translation>
+    </message>
+    <message>
+        <source>Invalid image</source>
+        <translation>Invalid image</translation>
+    </message>
+    <message>
+        <source>Please select a valid image file</source>
+        <translation>Please select a valid image file</translation>
+    </message>
 </context>
 <context>
     <name>ProxyHostCard</name>

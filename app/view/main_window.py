@@ -1,6 +1,6 @@
 # coding:utf-8
 from PyQt5.QtCore import QSize, QTimer, QUrl
-from PyQt5.QtGui import QIcon, QDesktopServices
+from PyQt5.QtGui import QIcon, QDesktopServices, QPainter
 from PyQt5.QtWidgets import QApplication
 
 from qfluentwidgets import (NavigationItemPosition, FluentWindow,
@@ -13,6 +13,7 @@ from .latest_interface import LatestInterface
 from .setting_interface import SettingInterface
 from ..common.config import cfg, APP_NAME
 from ..common.signal_bus import signalBus
+from ..background import BackgroundManager
 
 
 class MainWindow(FluentWindow):
@@ -21,6 +22,9 @@ class MainWindow(FluentWindow):
     def __init__(self):
         super().__init__()
         self.initWindow()
+
+        # create background manager
+        self.backgroundManager = BackgroundManager()
 
         # create system theme listener
         self.themeListener = SystemThemeListener(self)
@@ -45,6 +49,7 @@ class MainWindow(FluentWindow):
     def connectSignalToSlot(self):
         """ Connect signal to slot """
         signalBus.micaEnableChanged.connect(self.setMicaEffectEnabled)
+        signalBus.backgroundChanged.connect(self.update)
 
     def openGitHub(self):
         QDesktopServices.openUrl(QUrl("https://github.com/JustKanade"))
@@ -105,4 +110,25 @@ class MainWindow(FluentWindow):
         # retry mica effect
         if self.isMicaEffectEnabled():
             QTimer.singleShot(100, lambda: self.windowEffect.setMicaEffect(self.winId(), isDarkTheme()))
+    
+    def paintEvent(self, event):
+        """ Paint event for background rendering """
+        super().paintEvent(event)
+        
+        # check if background manager is initialized
+        if not hasattr(self, 'backgroundManager'):
+            return
+        
+        if self.backgroundManager.is_background_enabled():
+            painter = QPainter(self)
+            background_pixmap = self.backgroundManager.get_background_pixmap(self.size())
+            
+            if background_pixmap:
+                # set opacity
+                opacity = self.backgroundManager.get_background_opacity() / 100.0
+                painter.setOpacity(opacity)
+                
+                # draw background
+                painter.drawPixmap(0, 0, background_pixmap)
+                painter.end()
 
